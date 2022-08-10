@@ -129,9 +129,9 @@ export class GKEClusterSettingsComponent
   }
 
   ngOnDestroy(): void {
-    this.reset();
     this._unsubscribe.next();
     this._unsubscribe.complete();
+    this.reset();
   }
 
   generateName(): void {

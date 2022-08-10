@@ -204,7 +204,12 @@ export class EKSClusterSettingsComponent
         finalize(() => (this.isLoadingVpcs = false))
       )
       .subscribe((vpcs: EKSVpc[]) => {
-        this.vpcs = vpcs.map(vpc => vpc.id);
+        this.vpcs = vpcs.map(vpc => {
+          if (vpc.default) {
+            this.control(Controls.Vpc).setValue({main: vpc.id});
+          }
+          return vpc.id;
+        });
       });
   }
 
@@ -231,8 +236,12 @@ export class EKSClusterSettingsComponent
   }
 
   private _updateExternalClusterModel(): void {
-    const indexPosition = 2;
-    const version = this.controlValue(Controls.Version)?.main;
+    let version = this.controlValue(Controls.Version)?.main;
+    const versionSplitArr = version?.split('.');
+    if (versionSplitArr?.length && !(versionSplitArr[2] > 0)) {
+      version = versionSplitArr[0] + '.' + versionSplitArr[1];
+    }
+
     this._externalClusterService.externalCluster = {
       ...this._externalClusterService.externalCluster,
       name: this.controlValue(Controls.Name),
@@ -245,13 +254,13 @@ export class EKSClusterSettingsComponent
       spec: {
         eksclusterSpec: {
           roleArn: this.controlValue(Controls.RoleArn),
-          version: version?.slice(0, version.indexOf('.', indexPosition)),
+          version: version,
           vpcConfigRequest: {
             subnetIds: this.controlValue(Controls.SubnetIds),
             securityGroupIds: this.controlValue(Controls.SecurityGroupsIds),
           },
         } as EKSClusterSpec,
-        version: version?.slice(0, version.indexOf('.', indexPosition)),
+        version: version,
       } as ExternalClusterSpec,
     } as ExternalClusterModel;
   }
