@@ -65,7 +65,7 @@
     "@angular/material": "14.2.2",
     "@angular/platform-browser": "14.2.3",
     "@angular/platform-browser-dynamic": "14.2.3",
-    "@angular/router": "14.2.3",
+    "@angular/router": "14.2.4",
     "@fontsource/inconsolata": "4.5.7",
     "@fontsource/roboto": "4.5.8",
     "@fontsource/roboto-mono": "4.5.8",
