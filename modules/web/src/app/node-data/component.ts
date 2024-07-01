@@ -25,6 +25,7 @@ import {
 } from '@angular/core';
 import {FormBuilder, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validators} from '@angular/forms';
 import {ResourceType} from '@app/shared/entity/common';
+import {Project} from '@app/shared/entity/project';
 import {DEFAULT_ADMIN_SETTINGS} from '@app/shared/entity/settings';
 import {AsyncValidators} from '@app/shared/validators/async.validators';
 import {
@@ -38,7 +39,6 @@ import {DatacenterService} from '@core/services/datacenter';
 import {NameGeneratorService} from '@core/services/name-generator';
 import {NodeDataService} from '@core/services/node-data/service';
 import {OperatingSystemManagerService} from '@core/services/operating-system-manager';
-import {ParamsService, PathParam} from '@core/services/params';
 import {ProjectService} from '@core/services/project';
 import {SettingsService} from '@core/services/settings';
 import {QuotaWidgetComponent} from '@dynamic/enterprise/quotas/quota-widget/component';
@@ -54,6 +54,7 @@ import {NodeData} from '@shared/model/NodeSpecChange';
 import {BaseFormValidator} from '@shared/validators/base-form.validator';
 import {EMPTY, merge, of} from 'rxjs';
 import {filter, finalize, switchMap, take, takeUntil, tap} from 'rxjs/operators';
+import _ from 'lodash';
 
 enum Controls {
   Name = 'name',
@@ -111,7 +112,7 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
   operatingSystemProfiles: OperatingSystemProfile[] = [];
   operatingSystemProfileValidators = [KUBERNETES_RESOURCE_NAME_PATTERN_VALIDATOR];
   dialogEditMode = false;
-  projectId: string;
+  project: Project;
   isLoadingOSProfiles: boolean;
   isEnterpriseEdition = DynamicModule.isEnterpriseEdition;
   wizardMode: WizardMode;
@@ -144,7 +145,6 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
     private readonly _osmService: OperatingSystemManagerService,
     private readonly _projectService: ProjectService,
     private readonly _quotaCalculationService: QuotaCalculationService,
-    private readonly _params: ParamsService,
     private readonly _cdr: ChangeDetectorRef
   ) {
     super();
@@ -153,7 +153,7 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
   @ViewChild('quotaWidgetContainer', {read: ViewContainerRef}) set quotaWidgetContainer(ref: ViewContainerRef) {
     if (ref && this.isEnterpriseEdition && !this.quotaWidgetComponentRef) {
       this.quotaWidgetComponentRef = ref.createComponent(QuotaWidgetComponent).instance;
-      this.quotaWidgetComponentRef.projectId = this.projectId;
+      this.quotaWidgetComponentRef.projectId = this.project?.id;
       this.quotaWidgetComponentRef.showQuotaWidgetDetails = true;
       this.quotaWidgetComponentRef.showIcon = true;
       this.quotaWidgetComponentRef.estimatedQuotaExceeded
@@ -163,7 +163,7 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
         });
 
       this._quotaCalculationService
-        .getQuotaCalculations(this.projectId, this.provider)
+        .getQuotaCalculations(this.project?.id, this.provider)
         .pipe(takeUntil(this._unsubscribe))
         .subscribe((calculatedQuota: ResourceQuotaCalculation) => {
           this.quotaWidgetComponentRef.updateEstimatedQuota(calculatedQuota);
@@ -173,7 +173,9 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
 
   ngOnInit(): void {
     this.wizardMode = window.history.state?.mode;
-    this.projectId = this._params.get(PathParam.ProjectID);
+    this._projectService.selectedProject.pipe(take(1)).subscribe(project => {
+      this.project = project;
+    });
     this.selectedOperatingSystemProfile = this._nodeDataService.nodeData.operatingSystemProfile;
     this.isCusterTemplateEditMode = this._clusterSpecService.clusterTemplateEditMode;
 
@@ -238,7 +240,7 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
         delete this._nodeDataService.nodeData.spec.cloud[this.provider];
         this.provider = this._clusterSpecService.provider;
 
-        const mapKey = `${this.projectId}-${this.provider}`;
+        const mapKey = `${this.project?.id}-${this.provider}`;
         this._quotaCalculationService.reset(mapKey);
       });
 
@@ -296,7 +298,15 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
       });
 
     this._settingsService.adminSettings.pipe(take(1)).subscribe(settings => {
-      this.allowedOperatingSystems = settings?.allowedOperatingSystems && settings.allowedOperatingSystems;
+      this.allowedOperatingSystems = {...settings.allowedOperatingSystems};
+      const projectOS = this.project?.spec?.allowedOperatingSystems;
+      if (!_.isEmpty(projectOS)) {
+        Object.keys(this.allowedOperatingSystems)
+          .filter(os => this.allowedOperatingSystems[os])
+          .forEach(os => {
+            this.allowedOperatingSystems[os] = projectOS[os] ?? false;
+          });
+      }
       this._setDefaultOS();
 
       const autoUpdatesEnabled = settings.machineDeploymentOptions.autoUpdatesEnabled;
@@ -465,14 +475,7 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
   private _loadOperatingSystemProfiles() {
     this.isLoadingOSProfiles = true;
     const profiles$ = this.isDialogView()
-      ? this._projectService.selectedProject.pipe(take(1)).pipe(
-          switchMap(project => {
-            return this._osmService.getOperatingSystemProfilesForCluster(
-              this._clusterSpecService.cluster.id,
-              project.id
-            );
-          })
-        )
+      ? this._osmService.getOperatingSystemProfilesForCluster(this._clusterSpecService.cluster.id, this.project?.id)
       : this._datacenterSpec?.spec
         ? this._osmService.getOperatingSystemProfilesForSeed(this._datacenterSpec.spec.seed)
         : EMPTY;
