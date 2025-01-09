@@ -96,7 +96,6 @@ export class SideNavExpansionMenuComponent implements AfterViewChecked, OnInit {
   }
 
   isAdminSettingsExpandedActive(): boolean {
-    // fix the complexity of this function by extracting the logic to a separate function.
     switch (this.label) {
       case AdminPanelSections.Interface:
         return this.checkAdminInterfaceUrl();

@@ -13,16 +13,35 @@
 // limitations under the License.
 
 .announcement {
+  align-items: center;
   border-radius: 10px;
-  margin-left: 1%;
-  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 5px 1%;
   padding: 10px 20px;
   width: 98%;
 
+  p {
+    flex: 1;
+    margin: 0;
+    text-align: left;
+    word-break: break-word;
+  }
+
   div {
-    .mat-mdc-icon-button {
-      height: 25px;
-      width: 25px;
+    align-items: center;
+    display: flex;
+    padding-left: 10px;
+
+    .mdc-button {
+      height: 30px;
+      width: 30px;
+
+      .km-icon-close {
+        position: relative ;
+        top: 4px;
+      }
     }
   }
 }

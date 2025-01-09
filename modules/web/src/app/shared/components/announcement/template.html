@@ -16,10 +16,11 @@ limitations under the License.
 
 <km-dialog-title>Announcement</km-dialog-title>
 <mat-dialog-content>
-  <table class="km-table"
-         mat-table
-         [dataSource]="dataSource"
-         matSort>
+  <table mat-table
+         matSort
+         *ngIf="!hasAnnouncements()"
+         class="km-table"
+         [dataSource]="dataSource">
     <ng-container [matColumnDef]="Column.Message">
       <th mat-header-cell
           *matHeaderCellDef
@@ -33,7 +34,6 @@ limitations under the License.
           *matHeaderCellDef
           class="km-header-cell"></th>
       <td mat-cell
-          class="events-long-text"
           *matCellDef="let element"><button *ngIf="!isMessageRead(element)"
                 mat-icon-button
                 (click)="markAsRead(element)"
@@ -49,7 +49,7 @@ limitations under the License.
         class="km-mat-row"></tr>
   </table>
   <div class="km-row km-empty-list-msg"
-       *ngIf="hasAnnouncements()">No backups available.</div>
+       *ngIf="hasAnnouncements()">No announcements available.</div>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-flat-button

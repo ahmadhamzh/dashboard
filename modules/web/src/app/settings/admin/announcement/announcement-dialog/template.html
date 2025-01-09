@@ -27,12 +27,12 @@ limitations under the License.
     <div>
       <div class="date-and-time">
         <mat-form-field class="date-pick">
-          <mat-label>Expires in</mat-label>
+          <mat-label>Expires at</mat-label>
           <input matInput
                  [min]="minDate"
                  [matDatepicker]="picker"
                  [formControlName]="Controls?.ExpireDate">
-          <mat-hint>Expires date MM/DD/YYYY</mat-hint>
+          <mat-hint>Expiry date MM/DD/YYYY</mat-hint>
           <mat-datepicker-toggle matIconSuffix
                                  [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
@@ -43,7 +43,7 @@ limitations under the License.
                  class="time-pick"
                  [formControlName]="Controls?.ExpireTime"
                  type="time">
-          <mat-hint>Expires time HH:MM</mat-hint>
+          <mat-hint>Expiry time HH:MM</mat-hint>
         </mat-form-field>
       </div>
 

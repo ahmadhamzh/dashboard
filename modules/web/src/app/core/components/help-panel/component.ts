@@ -113,16 +113,22 @@ export class HelpPanelComponent implements OnInit, OnDestroy {
   }
 
   openAnnouncementsDialog(): void {
-    const sortedAnnouncements = Object.entries(this.adminSettings.announcements).sort(
-      ([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const sortedAnnouncements = this.adminSettings?.announcements
+      ? Object.entries(this.adminSettings?.announcements).sort(
+          ([, a], [, b]) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      : [];
+    const announcementsObject = Object.fromEntries(sortedAnnouncements);
     this._matDialog
-      .open(AnnouncementDialogComponent, {data: Object.fromEntries(sortedAnnouncements)})
+      .open(AnnouncementDialogComponent, {data: announcementsObject})
       .afterClosed()
       .pipe(take(1))
       .subscribe(data => {
         if (data) {
-          const readAnnouncements = data.filter((value, index, self) => self.indexOf(value) === index);
+          const adminAnnouncementsID = Object.keys(announcementsObject);
+          const readAnnouncements = data.filter(
+            (value, index, self) => self.indexOf(value) === index && adminAnnouncementsID.includes(value)
+          );
           this._updateUserReadAnnouncements(readAnnouncements);
         }
       });

@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {NavigationEnd, Router} from '@angular/router';
 import {AdminAnnouncement} from '@app/shared/entity/settings';
-import {filter, retry, Subject, take, takeUntil} from 'rxjs';
+import {filter, Subject, take, takeUntil} from 'rxjs';
 import {AnnouncementDialogComponent} from '../announcement/component';
-import {SettingsService} from '@app/core/services/settings';
 import {UserService} from '@app/core/services/user';
 
 const PAGES_WITHOUT_ANNOUNCEMENT_BANNER = ['/settings', '/account', '/rest-api', '/terms-of-service$', '/404$'];
@@ -28,21 +27,20 @@ const PAGES_WITHOUT_ANNOUNCEMENT_BANNER = ['/settings', '/account', '/rest-api',
   styleUrl: './style.scss',
 })
 export class AnnouncementbannerComponent implements OnInit {
+  @Input() announcements: Map<string, AdminAnnouncement>;
   curentPath: string;
   readAnnouncements: string[] = [];
-  announcements = new Map<string, AdminAnnouncement>();
   private _showAnnouncementBanner: boolean = false;
   private _unsubscribe = new Subject<void>();
 
   constructor(
-    private readonly _settingsService: SettingsService,
     private readonly _userService: UserService,
     private _router: Router,
     private readonly _matDialog: MatDialog
   ) {}
 
   get checkPages(): boolean {
-    return this._showAnnouncementBanner && !!this.announcements?.size;
+    return this._showAnnouncementBanner;
   }
 
   get bannerMessage(): string {
@@ -66,13 +64,17 @@ export class AnnouncementbannerComponent implements OnInit {
   }
 
   openAnnouncementsDialog(): void {
+    const announcementsObject = Object.fromEntries(this.announcements);
     this._matDialog
-      .open(AnnouncementDialogComponent, {data: Object.fromEntries(this.announcements)})
+      .open(AnnouncementDialogComponent, {data: announcementsObject})
       .afterClosed()
       .pipe(take(1))
       .subscribe(data => {
         if (data) {
-          const readAnnouncements = data.filter((value, index, self) => self.indexOf(value) === index);
+          const adminAnnouncementsID = Object.keys(announcementsObject);
+          const readAnnouncements = data.filter(
+            (value, index, self) => self.indexOf(value) === index && adminAnnouncementsID.includes(value)
+          );
           this._updateUserReadAnnouncements(readAnnouncements);
         }
       });
@@ -80,6 +82,7 @@ export class AnnouncementbannerComponent implements OnInit {
 
   closeBanner(id: string): void {
     this.readAnnouncements.push(id);
+    this.announcements.delete(id);
     this.readAnnouncements = this.readAnnouncements.filter((value, index, self) => self.indexOf(value) === index);
     this._userService.patchReadAnnouncements(this.readAnnouncements).subscribe(announcements => {
       this.readAnnouncements = announcements;
@@ -87,24 +90,21 @@ export class AnnouncementbannerComponent implements OnInit {
   }
 
   private _getAnnouncements(): void {
-    const retryTimes = 4;
-    this._settingsService.adminSettings.pipe(retry(retryTimes), take(1)).subscribe(adminSettings => {
-      const announcements = adminSettings?.announcements;
-      if (announcements) {
-        Object.keys(announcements)
-          .sort(
-            (a, b) => new Date(announcements[b].createdAt).getTime() - new Date(announcements[a].createdAt).getTime()
-          )
-          .forEach(id => {
-            if (
-              announcements[id]?.isActive &&
-              (!announcements[id]?.expires || new Date(announcements[id]?.expires) > new Date())
-            ) {
-              this.announcements.set(id, announcements[id]);
-            }
-          });
-      }
-    });
+    if (this.announcements.size) {
+      Object.keys(this.announcements)
+        .sort(
+          (a, b) =>
+            new Date(this.announcements[b].createdAt).getTime() - new Date(this.announcements[a].createdAt).getTime()
+        )
+        .forEach(id => {
+          if (
+            this.announcements[id]?.isActive &&
+            (!this.announcements[id]?.expires || new Date(this.announcements[id]?.expires) > new Date())
+          ) {
+            this.announcements.set(id, this.announcements[id]);
+          }
+        });
+    }
   }
 
   private _getReadAnnouncements(): void {

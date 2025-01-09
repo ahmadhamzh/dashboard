@@ -25,9 +25,9 @@ enum Column {
 }
 
 @Component({
-  // check the name
   selector: 'km-announcement',
   templateUrl: './template.html',
+  styleUrl: './style.scss',
 })
 export class AnnouncementDialogComponent implements OnInit {
   readonly Column = Column;
@@ -48,7 +48,7 @@ export class AnnouncementDialogComponent implements OnInit {
   }
 
   hasAnnouncements(): boolean {
-    return !!Object.keys(this.announcements).length;
+    return !this.announcements?.size;
   }
 
   markAsRead(announcement: string): void {

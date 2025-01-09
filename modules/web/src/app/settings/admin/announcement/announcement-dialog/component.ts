@@ -71,7 +71,6 @@ export class AdminAnnouncementDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const endOfSlice = 5;
     this.isEditDialog = this._dialogModeService.isEditDialog;
     this.form = new FormGroup({
       [Controls.Message]: new FormControl(this._data?.announcement?.message ?? '', [Validators.required]),
@@ -80,7 +79,13 @@ export class AdminAnnouncementDialogComponent implements OnInit, OnDestroy {
         this._data?.announcement?.expires ? new Date(this._data?.announcement?.expires) : ''
       ),
       [Controls.ExpireTime]: new FormControl(
-        this._data?.announcement?.expires ? this._data?.announcement?.expires.split('T')[1].slice(0, endOfSlice) : ''
+        this._data?.announcement?.expires
+          ? new Date(this._data.announcement.expires).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })
+          : ''
       ),
     });
     if (!this._data?.announcement?.expires) {
