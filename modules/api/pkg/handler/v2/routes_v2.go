@@ -50,6 +50,7 @@ import (
 	"k8c.io/dashboard/v2/pkg/handler/v2/gatekeeperconfig"
 	groupprojectbinding "k8c.io/dashboard/v2/pkg/handler/v2/group-project-binding"
 	ipampool "k8c.io/dashboard/v2/pkg/handler/v2/ipampool"
+	"k8c.io/dashboard/v2/pkg/handler/v2/kubelb"
 	kubernetesdashboard "k8c.io/dashboard/v2/pkg/handler/v2/kubernetes-dashboard"
 	"k8c.io/dashboard/v2/pkg/handler/v2/machine"
 	mlaadminsetting "k8c.io/dashboard/v2/pkg/handler/v2/mla_admin_setting"
@@ -1685,6 +1686,15 @@ func (r Routing) RegisterV2(mux *mux.Router, oidcKubeConfEndpoint bool) {
 	mux.Methods(http.MethodGet).
 		Path("/seeds/status").
 		Handler(r.listSeedStatus())
+
+	// Defines a set of HTTP endpoints for managing kubeLB
+	mux.Methods(http.MethodGet).
+		Path("/seeds/{seed_name}/kubelb/tenants").
+		Handler(r.listKubeLBTenants())
+
+	mux.Methods(http.MethodGet).
+		Path("/seeds/{seed_name}/dc/{dc}/kubelb/tenants/{tenant_name}").
+		Handler(r.getKubeLBTenants())
 }
 
 // swagger:route GET /api/v2/projects/{project_id}/providers/aws/sizes project listProjectAWSSizes
@@ -11007,6 +11017,28 @@ func (r Routing) listSeedStatus() http.Handler {
 			middleware.UserSaver(r.userProvider),
 		)(seedoverview.ListSeedStatus(r.seedsGetter)),
 		common.DecodeEmptyReq,
+		handler.EncodeJSON,
+		r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) listKubeLBTenants() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.SetPrivilegedClusterProvider(r.clusterProviderGetter, r.seedsGetter),
+		)(kubelb.ListKubeLBTenants(r.seedsGetter)),
+		kubelb.DecodeListKubeLBTenantsReq,
+		handler.EncodeJSON,
+		r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) getKubeLBTenants() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.SetPrivilegedClusterProvider(r.clusterProviderGetter, r.seedsGetter),
+		)(kubelb.GetKubeLBTenants(r.seedsGetter)),
+		kubelb.DecodeGetKubeLBTenantsReq,
 		handler.EncodeJSON,
 		r.defaultServerOptions()...,
 	)
