@@ -29,7 +29,7 @@ func listKubeLBTenants(_ context.Context, _ interface{}, _ provider.SeedsGetter)
 	return nil, nil
 }
 
-func decodeListKubeLBTenantsReq(_ context.Context, _ *http.Request) (interface{}, error) {
+func DecodeListKubeLBTenantsReq(_ context.Context, _ *http.Request) (interface{}, error) {
 	return nil, nil
 }
 
@@ -37,6 +37,10 @@ func getKubeLBTenants(_ context.Context, _ interface{}, _ provider.SeedsGetter) 
 	return nil, nil
 }
 
-func decodeGetKubeLBTenantsReq(_ context.Context, _ *http.Request) (interface{}, error) {
+func DecodeGetKubeLBTenantsReq(_ context.Context, _ *http.Request) (interface{}, error) {
+	return nil, nil
+}
+
+func DecodePatchKubeLBTenantsReq(_ context.Context, _ *http.Request) (interface{}, error) {
 	return nil, nil
 }

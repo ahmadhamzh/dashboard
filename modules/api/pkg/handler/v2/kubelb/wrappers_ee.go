@@ -30,7 +30,7 @@ func listKubeLBTenants(ctx context.Context, request interface{}, seedsGetter pro
 	return kubelb.ListKubeLBTenants(ctx, request, seedsGetter)
 }
 
-func decodeListKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
+func DecodeListKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
 	return kubelb.DecodeListKubeLBTenantsReq(c, r)
 }
 
@@ -38,6 +38,10 @@ func getKubeLBTenants(ctx context.Context, request interface{}, seedsGetter prov
 	return kubelb.GetKubeLBTenants(ctx, request, seedsGetter)
 }
 
-func decodeGetKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
+func DecodeGetKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
+	return kubelb.DecodeGetKubeLBTenantsReq(c, r)
+}
+
+func DecodePatchKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
 	return kubelb.DecodeGetKubeLBTenantsReq(c, r)
 }
