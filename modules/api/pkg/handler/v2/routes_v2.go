@@ -1769,6 +1769,10 @@ func (r Routing) RegisterV2(mux *mux.Router, oidcKubeConfEndpoint bool) {
 	mux.Methods(http.MethodGet).
 		Path("/seeds/{seed_name}/dc/{dc}/kubelb/tenants/{tenant_name}").
 		Handler(r.getKubeLBTenants())
+
+	mux.Methods(http.MethodPatch).
+		Path("/seeds/{seed_name}/dc/{dc}/kubelb/tenants/{tenant_name}").
+		Handler(r.patchKubeLBTenants())
 }
 
 // swagger:route GET /api/v2/projects/{project_id}/providers/aws/sizes project listProjectAWSSizes
@@ -11522,6 +11526,17 @@ func (r Routing) getKubeLBTenants() http.Handler {
 			middleware.SetPrivilegedClusterProvider(r.clusterProviderGetter, r.seedsGetter),
 		)(kubelb.GetKubeLBTenants(r.seedsGetter)),
 		kubelb.DecodeGetKubeLBTenantsReq,
+		handler.EncodeJSON,
+		r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) patchKubeLBTenants() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.SetPrivilegedClusterProvider(r.clusterProviderGetter, r.seedsGetter),
+		)(kubelb.GetKubeLBTenants(r.seedsGetter)),
+		kubelb.DecodePatchKubeLBTenantsReq,
 		handler.EncodeJSON,
 		r.defaultServerOptions()...,
 	)

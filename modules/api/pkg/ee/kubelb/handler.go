@@ -26,6 +26,7 @@ package kubelb
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -54,9 +55,7 @@ type listSeedKubeLBTenantsReq struct {
 }
 
 type getKubeLBTenantsReq struct {
-	// in: path
-	// required: true
-	SeedName string `json:"seed_name"`
+	listSeedKubeLBTenantsReq
 	// in: path
 	// required: true
 	DC string `json:"dc"`
@@ -65,13 +64,14 @@ type getKubeLBTenantsReq struct {
 	TenantName string `json:"tenant_name"`
 }
 
-func (req listSeedKubeLBTenantsReq) GetSeedCluster() apiv1.SeedCluster {
-	return apiv1.SeedCluster{
-		SeedName: req.SeedName,
-	}
+type patchKubeLBTenantsReq struct {
+	getKubeLBTenantsReq
+	// in: body
+	// required: true
+	Body kubelbv1alpha1.TenantSpec `json:"body"`
 }
 
-func (req getKubeLBTenantsReq) GetSeedCluster() apiv1.SeedCluster {
+func (req listSeedKubeLBTenantsReq) GetSeedCluster() apiv1.SeedCluster {
 	return apiv1.SeedCluster{
 		SeedName: req.SeedName,
 	}
@@ -191,6 +191,84 @@ func DecodeGetKubeLBTenantsReq(c context.Context, r *http.Request) (interface{},
 	req.SeedName = Seedname
 	req.DC = dc
 	req.TenantName = TenantName
+	return req, nil
+}
+
+func PatchKubeLBTenants(ctx context.Context, request interface{}, seedsGetter provider.SeedsGetter) (interface{}, error) {
+	req, ok := request.(patchKubeLBTenantsReq)
+	if !ok {
+		return nil, utilerrors.NewBadRequest("invalid request")
+	}
+
+	privilegedClusterProvider := ctx.Value(middleware.PrivilegedClusterProviderContextKey).(provider.PrivilegedClusterProvider)
+	seedClient := privilegedClusterProvider.GetSeedClusterAdminRuntimeClient()
+	seeds, err := seedsGetter()
+	if err != nil {
+		return nil, common.KubernetesErrorToHTTPError(err)
+	}
+	seed := seeds[req.SeedName]
+	dc := seed.Spec.Datacenters[req.DC]
+	secret, err := getDataCenterKubeLBKubeconfigSecret(ctx, seedClient, seed, dc)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get kubeLB secret: %w", err)
+	}
+
+	kubeLBManagerKubeconfig := secret.Data["kubeconfig"]
+	if len(kubeLBManagerKubeconfig) == 0 {
+		return nil, fmt.Errorf("no kubeconfig found")
+	}
+
+	kubeLBKubeconfig, err := clientcmd.Load(kubeLBManagerKubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse kubeconfig: %w", err)
+	}
+	cfg, err := clientcmd.NewInteractiveClientConfig(*kubeLBKubeconfig, "", nil, nil, nil).ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load kubeconfig: %w", err)
+	}
+	client, err := ctrlruntimeclient.New(cfg, ctrlruntimeclient.Options{})
+	existingTenant := &kubelbv1alpha1.Tenant{}
+	namespacedName := types.NamespacedName{
+		Namespace: seed.Namespace,
+		Name:      req.TenantName,
+	}
+	if err := client.Get(ctx, namespacedName, existingTenant); err != nil {
+		return nil, fmt.Errorf("failed to get tenant%s: %w", err)
+	}
+	updatedTenant := existingTenant
+	updatedTenant.Spec = req.Body
+
+	if err := client.Patch(ctx, updatedTenant, ctrlruntimeclient.MergeFrom(existingTenant)); err != nil {
+		return nil, fmt.Errorf("failed to patch tenant%s: %w", err)
+	}
+
+	return updatedTenant, nil
+}
+
+func DecodePatchKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
+	var req patchKubeLBTenantsReq
+	Seedname := mux.Vars(r)["seed_name"]
+	if Seedname == "" {
+		return nil, utilerrors.NewBadRequest("'seed_name' parameter is required but was not provided")
+	}
+
+	dc := mux.Vars(r)["dc"]
+	if dc == "" {
+		return nil, utilerrors.NewBadRequest("'dc' parameter is required but was not provided")
+	}
+
+	TenantName := mux.Vars(r)["tenant_name"]
+	if TenantName == "" {
+		return nil, utilerrors.NewBadRequest("'tenant_name' parameter is required but was not provided")
+	}
+
+	req.SeedName = Seedname
+	req.DC = dc
+	req.TenantName = TenantName
+	if err := json.NewDecoder(r.Body).Decode(&req.Body); err != nil {
+		return nil, err
+	}
 	return req, nil
 }
 

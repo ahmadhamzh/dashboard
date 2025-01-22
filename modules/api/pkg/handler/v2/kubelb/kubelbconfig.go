@@ -18,7 +18,6 @@ package kubelb
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	"k8c.io/dashboard/v2/pkg/provider"
@@ -30,16 +29,8 @@ func ListKubeLBTenants(seedsGetter provider.SeedsGetter) endpoint.Endpoint {
 	}
 }
 
-func DecodeListKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
-	return decodeListKubeLBTenantsReq(c, r)
-}
-
 func GetKubeLBTenants(seedsGetter provider.SeedsGetter) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		return getKubeLBTenants(ctx, request, seedsGetter)
 	}
-}
-
-func DecodeGetKubeLBTenantsReq(c context.Context, r *http.Request) (interface{}, error) {
-	return decodeGetKubeLBTenantsReq(c, r)
 }
