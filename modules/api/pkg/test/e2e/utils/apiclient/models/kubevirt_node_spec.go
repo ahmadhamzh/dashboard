@@ -321,6 +321,11 @@ func (m *KubevirtNodeSpec) contextValidateSecondaryDisks(ctx context.Context, fo
 	for i := 0; i < len(m.SecondaryDisks); i++ {
 
 		if m.SecondaryDisks[i] != nil {
+
+			if swag.IsZero(m.SecondaryDisks[i]) { // not required
+				return nil
+			}
+
 			if err := m.SecondaryDisks[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("secondaryDisks" + "." + strconv.Itoa(i))
@@ -341,6 +346,11 @@ func (m *KubevirtNodeSpec) contextValidateTopologySpreadConstraints(ctx context.
 	for i := 0; i < len(m.TopologySpreadConstraints); i++ {
 
 		if m.TopologySpreadConstraints[i] != nil {
+
+			if swag.IsZero(m.TopologySpreadConstraints[i]) { // not required
+				return nil
+			}
+
 			if err := m.TopologySpreadConstraints[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("topologySpreadConstraints" + "." + strconv.Itoa(i))
@@ -359,6 +369,11 @@ func (m *KubevirtNodeSpec) contextValidateTopologySpreadConstraints(ctx context.
 func (m *KubevirtNodeSpec) contextValidateInstancetype(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Instancetype != nil {
+
+		if swag.IsZero(m.Instancetype) { // not required
+			return nil
+		}
+
 		if err := m.Instancetype.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("instancetype")
@@ -375,6 +390,11 @@ func (m *KubevirtNodeSpec) contextValidateInstancetype(ctx context.Context, form
 func (m *KubevirtNodeSpec) contextValidateNodeAffinityPreset(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.NodeAffinityPreset != nil {
+
+		if swag.IsZero(m.NodeAffinityPreset) { // not required
+			return nil
+		}
+
 		if err := m.NodeAffinityPreset.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("nodeAffinityPreset")
@@ -391,6 +411,11 @@ func (m *KubevirtNodeSpec) contextValidateNodeAffinityPreset(ctx context.Context
 func (m *KubevirtNodeSpec) contextValidatePreference(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Preference != nil {
+
+		if swag.IsZero(m.Preference) { // not required
+			return nil
+		}
+
 		if err := m.Preference.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("preference")

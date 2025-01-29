@@ -52,6 +52,9 @@ type DatacenterSpecKubevirt struct {
 
 	// provider network
 	ProviderNetwork *ProviderNetwork `json:"providerNetwork,omitempty"`
+
+	// vm eviction strategy
+	VMEvictionStrategy EvictionStrategy `json:"vmEvictionStrategy,omitempty"`
 }
 
 // Validate validates this datacenter spec kubevirt
@@ -79,6 +82,10 @@ func (m *DatacenterSpecKubevirt) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateProviderNetwork(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateVMEvictionStrategy(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -216,6 +223,23 @@ func (m *DatacenterSpecKubevirt) validateProviderNetwork(formats strfmt.Registry
 	return nil
 }
 
+func (m *DatacenterSpecKubevirt) validateVMEvictionStrategy(formats strfmt.Registry) error {
+	if swag.IsZero(m.VMEvictionStrategy) { // not required
+		return nil
+	}
+
+	if err := m.VMEvictionStrategy.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("vmEvictionStrategy")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("vmEvictionStrategy")
+		}
+		return err
+	}
+
+	return nil
+}
+
 // ContextValidate validate this datacenter spec kubevirt based on the context it is used
 func (m *DatacenterSpecKubevirt) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
@@ -244,6 +268,10 @@ func (m *DatacenterSpecKubevirt) ContextValidate(ctx context.Context, formats st
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateVMEvictionStrategy(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -255,6 +283,11 @@ func (m *DatacenterSpecKubevirt) contextValidateCustomNetworkPolicies(ctx contex
 	for i := 0; i < len(m.CustomNetworkPolicies); i++ {
 
 		if m.CustomNetworkPolicies[i] != nil {
+
+			if swag.IsZero(m.CustomNetworkPolicies[i]) { // not required
+				return nil
+			}
+
 			if err := m.CustomNetworkPolicies[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("customNetworkPolicies" + "." + strconv.Itoa(i))
@@ -275,6 +308,11 @@ func (m *DatacenterSpecKubevirt) contextValidateInfraStorageClasses(ctx context.
 	for i := 0; i < len(m.InfraStorageClasses); i++ {
 
 		if m.InfraStorageClasses[i] != nil {
+
+			if swag.IsZero(m.InfraStorageClasses[i]) { // not required
+				return nil
+			}
+
 			if err := m.InfraStorageClasses[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("infraStorageClasses" + "." + strconv.Itoa(i))
@@ -293,6 +331,11 @@ func (m *DatacenterSpecKubevirt) contextValidateInfraStorageClasses(ctx context.
 func (m *DatacenterSpecKubevirt) contextValidateDNSConfig(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.DNSConfig != nil {
+
+		if swag.IsZero(m.DNSConfig) { // not required
+			return nil
+		}
+
 		if err := m.DNSConfig.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("dnsConfig")
@@ -309,6 +352,11 @@ func (m *DatacenterSpecKubevirt) contextValidateDNSConfig(ctx context.Context, f
 func (m *DatacenterSpecKubevirt) contextValidateImages(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Images != nil {
+
+		if swag.IsZero(m.Images) { // not required
+			return nil
+		}
+
 		if err := m.Images.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("images")
@@ -325,6 +373,11 @@ func (m *DatacenterSpecKubevirt) contextValidateImages(ctx context.Context, form
 func (m *DatacenterSpecKubevirt) contextValidateNamespacedMode(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.NamespacedMode != nil {
+
+		if swag.IsZero(m.NamespacedMode) { // not required
+			return nil
+		}
+
 		if err := m.NamespacedMode.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("namespacedMode")
@@ -341,6 +394,11 @@ func (m *DatacenterSpecKubevirt) contextValidateNamespacedMode(ctx context.Conte
 func (m *DatacenterSpecKubevirt) contextValidateProviderNetwork(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.ProviderNetwork != nil {
+
+		if swag.IsZero(m.ProviderNetwork) { // not required
+			return nil
+		}
+
 		if err := m.ProviderNetwork.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("providerNetwork")
@@ -349,6 +407,24 @@ func (m *DatacenterSpecKubevirt) contextValidateProviderNetwork(ctx context.Cont
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *DatacenterSpecKubevirt) contextValidateVMEvictionStrategy(ctx context.Context, formats strfmt.Registry) error {
+
+	if swag.IsZero(m.VMEvictionStrategy) { // not required
+		return nil
+	}
+
+	if err := m.VMEvictionStrategy.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("vmEvictionStrategy")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("vmEvictionStrategy")
+		}
+		return err
 	}
 
 	return nil
