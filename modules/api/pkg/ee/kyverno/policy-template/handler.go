@@ -62,7 +62,7 @@ type getPolicyTemplateReq struct {
 type createPolicyTemplateReq struct {
 	// in: body
 	// required: true
-	apiv2.PolicyTemplate
+	Body apiv2.PolicyTemplate
 }
 
 // patchPolicyTemplateReq defines HTTP request for patching a policy template
@@ -177,7 +177,7 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 		return nil, utilerrors.NewBadRequest("invalid request")
 	}
 
-	userInfo, err := userInfoGetter(ctx, req.Spec.ProjectID)
+	userInfo, err := userInfoGetter(ctx, req.Body.Spec.ProjectID)
 
 	if err != nil {
 		return nil, err
@@ -187,12 +187,12 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 		return nil, fmt.Errorf("Only admins and project owners can create policy template")
 	}
 	if !userInfo.IsAdmin {
-		if req.Spec.Visibility == globalVisibility {
+		if req.Body.Spec.Visibility == globalVisibility {
 			return nil, fmt.Errorf("Only admins can create policy template with global visibility")
 		}
 	}
 
-	policyTemplateSpec := req.Spec.DeepCopy()
+	policyTemplateSpec := req.Body.Spec.DeepCopy()
 
 	if policyTemplateSpec == nil {
 		return nil, fmt.Errorf("policyTemplateSpec is nil")
@@ -200,7 +200,7 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 
 	policyTemplate := &kubermaticv1.PolicyTemplate{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: req.Name,
+			Name: req.Body.Name,
 		},
 		Spec: *policyTemplateSpec,
 	}
@@ -218,7 +218,7 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 
 func DecodeCreatePolicyTemplateReq(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req createPolicyTemplateReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req.Body); err != nil {
 		return nil, err
 	}
 

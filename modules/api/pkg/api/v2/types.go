@@ -2327,16 +2327,14 @@ type BackupStorageLocationList struct {
 type PolicyTemplate struct {
 	Name string `json:"name,omitempty"`
 	// swagger:ignore
-	Spec kubermaticv1.PolicyTemplateSpec `json:"spec,omitempty"`
+	Spec kubermaticv1.PolicyTemplateSpec `json:"spec"`
 }
 
 // PolicyBinding binds a PolicyTemplate to specific clusters/projects and
 // optionally enables or disables it (if the template is not enforced).
 // swagger:model PolicyBinding
 type PolicyBinding struct {
-	Name string `json:"name,omitempty"`
-	// swagger:ignore
-	Spec kubermaticv1.PolicyBindingSpec `json:"spec,omitempty"`
-	// swagger:ignore
-	Status kubermaticv1.PolicyBindingStatus `json:"status,omitempty"`
+	Name   string                           `json:"name"`
+	Spec   kubermaticv1.PolicyBindingSpec   `json:"spec"`
+	Status kubermaticv1.PolicyBindingStatus `json:"status"`
 }

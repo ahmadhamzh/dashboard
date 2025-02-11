@@ -72,6 +72,10 @@ type ResourceFilter struct {
 func (m *ResourceFilter) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateOperations(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateSubjects(formats); err != nil {
 		res = append(res, err)
 	}
@@ -87,6 +91,27 @@ func (m *ResourceFilter) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ResourceFilter) validateOperations(formats strfmt.Registry) error {
+	if swag.IsZero(m.Operations) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Operations); i++ {
+
+		if err := m.Operations[i].Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("operations" + "." + strconv.Itoa(i))
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("operations" + "." + strconv.Itoa(i))
+			}
+			return err
+		}
+
+	}
+
 	return nil
 }
 
@@ -158,6 +183,10 @@ func (m *ResourceFilter) validateSelector(formats strfmt.Registry) error {
 func (m *ResourceFilter) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateOperations(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateSubjects(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -173,6 +202,24 @@ func (m *ResourceFilter) ContextValidate(ctx context.Context, formats strfmt.Reg
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ResourceFilter) contextValidateOperations(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Operations); i++ {
+
+		if err := m.Operations[i].ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("operations" + "." + strconv.Itoa(i))
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("operations" + "." + strconv.Itoa(i))
+			}
+			return err
+		}
+
+	}
+
 	return nil
 }
 

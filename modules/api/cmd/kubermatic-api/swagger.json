@@ -7303,22 +7303,12 @@
         "operationId": "createPolicyBinding",
         "parameters": [
           {
-            "type": "string",
-            "x-go-name": "Name",
-            "name": "name",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "x-go-name": "Namespace",
-            "name": "namespace",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "x-go-name": "ProjectID",
-            "name": "projectID",
-            "in": "query"
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createPolicyBindingBody"
+            }
           }
         ],
         "responses": {
@@ -7553,10 +7543,12 @@
         "operationId": "createPolicyTemplate",
         "parameters": [
           {
-            "type": "string",
-            "x-go-name": "Name",
-            "name": "name",
-            "in": "query"
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyTemplate"
+            }
           }
         ],
         "responses": {
@@ -30860,35 +30852,45 @@
       "x-go-package": "github.com/open-policy-agent/frameworks/constraint/pkg/apis/templates/v1"
     },
     "Condition": {
+      "description": "This struct is intended for direct use as an array at the field path .status.conditions.  For example,\n\ntype FooStatus struct{\nRepresents the observations of a foo's current state.\nKnown .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"\n+patchMergeKey=type\n+patchStrategy=merge\n+listType=map\n+listMapKey=type\nConditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\nother fields\n}",
       "type": "object",
-      "title": "Condition defines variable-based conditional criteria for rule execution.",
+      "title": "Condition contains details for one aspect of the current state of this API Resource.",
       "properties": {
-        "key": {
-          "$ref": "#/definitions/JSON"
+        "lastTransitionTime": {
+          "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.\n+required\n+kubebuilder:validation:Required\n+kubebuilder:validation:Type=string\n+kubebuilder:validation:Format=date-time",
+          "type": "string",
+          "x-go-name": "LastTransitionTime"
         },
         "message": {
-          "description": "Message is an optional display message",
+          "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.\n+required\n+kubebuilder:validation:Required\n+kubebuilder:validation:MaxLength=32768",
           "type": "string",
           "x-go-name": "Message"
         },
-        "operator": {
-          "$ref": "#/definitions/ConditionOperator"
+        "observedGeneration": {
+          "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.\n+optional\n+kubebuilder:validation:Minimum=0",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ObservedGeneration"
         },
-        "value": {
-          "$ref": "#/definitions/JSON"
+        "reason": {
+          "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.\n+required\n+kubebuilder:validation:Required\n+kubebuilder:validation:MaxLength=1024\n+kubebuilder:validation:MinLength=1\n+kubebuilder:validation:Pattern=`^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$`",
+          "type": "string",
+          "x-go-name": "Reason"
+        },
+        "status": {
+          "$ref": "#/definitions/ConditionStatus"
+        },
+        "type": {
+          "description": "type of condition in CamelCase or in foo.example.com/CamelCase.\n\nMany .condition.type values are consistent across resources like Available, but because arbitrary conditions can be\nuseful (see .node.status.conditions), the ability to deconflict is important.\nThe regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)\n+required\n+kubebuilder:validation:Required\n+kubebuilder:validation:Pattern=`^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$`\n+kubebuilder:validation:MaxLength=316",
+          "type": "string",
+          "x-go-name": "Type"
         }
       },
-      "x-go-package": "github.com/kyverno/kyverno/api/kyverno/v1"
-    },
-    "ConditionOperator": {
-      "description": "+kubebuilder:validation:Enum=Equals;NotEquals;In;AnyIn;AllIn;NotIn;AnyNotIn;AllNotIn;GreaterThanOrEquals;GreaterThan;LessThanOrEquals;LessThan;DurationGreaterThanOrEquals;DurationGreaterThan;DurationLessThanOrEquals;DurationLessThan",
-      "type": "string",
-      "title": "ConditionOperator is the operation performed on condition key and value.",
-      "x-go-package": "github.com/kyverno/kyverno/api/kyverno/v1"
+      "x-go-package": "k8s.io/apimachinery/pkg/apis/meta/v1"
     },
     "ConditionStatus": {
       "type": "string",
-      "x-go-package": "k8s.io/api/core/v1"
+      "x-go-package": "k8s.io/apimachinery/pkg/apis/meta/v1"
     },
     "ConditionsWrapper": {
       "description": "+k8s:deepcopy-gen=false",
@@ -39357,6 +39359,12 @@
         "name": {
           "type": "string",
           "x-go-name": "Name"
+        },
+        "spec": {
+          "$ref": "#/definitions/PolicyBindingSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/PolicyBindingStatus"
         }
       },
       "x-go-package": "k8c.io/dashboard/v2/pkg/api/v2"
@@ -39380,6 +39388,27 @@
         },
         "target": {
           "$ref": "#/definitions/PolicyTargetSpec"
+        }
+      },
+      "x-go-package": "k8c.io/kubermatic/v2/pkg/apis/kubermatic/v1"
+    },
+    "PolicyBindingStatus": {
+      "type": "object",
+      "title": "PolicyBindingStatus is the status of the policy binding.",
+      "properties": {
+        "conditions": {
+          "description": "Conditions represents the latest available observations of the policy binding's current state\n+optional\n+listType=map\n+listMapKey=type",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "x-go-name": "Conditions"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the generation observed by the controller.\n\n+optional",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ObservedGeneration"
         }
       },
       "x-go-package": "k8c.io/kubermatic/v2/pkg/apis/kubermatic/v1"
@@ -42931,6 +42960,27 @@
         }
       },
       "x-go-package": "k8c.io/dashboard/v2/pkg/handler/v2/constraint"
+    },
+    "createPolicyBindingBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "type": "string",
+          "x-go-name": "Namespace"
+        },
+        "projectID": {
+          "type": "string",
+          "x-go-name": "ProjectID"
+        },
+        "spec": {
+          "$ref": "#/definitions/PolicyBindingSpec"
+        }
+      },
+      "x-go-package": "k8c.io/dashboard/v2/pkg/ee/kyverno/policy-binding"
     },
     "ctBody": {
       "type": "object",

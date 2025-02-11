@@ -45,7 +45,7 @@ run_swagger generate spec \
   --scan-models \
   -o ${TMP_SWAGGER} \
   -x github.com/sigstore/rekor/pkg/generated/models \
-  -x k8s.io/api/admissionregistration/* \
+  -x "github.com/kyverno/kyverno/api/kyverno/v1"/* \
   -x k8c.io/kubermatic/*
 
 rm -r ../../pkg/test/e2e/utils/apiclient/
