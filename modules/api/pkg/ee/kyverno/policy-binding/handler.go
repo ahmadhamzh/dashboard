@@ -133,9 +133,10 @@ func ListEndpoint(ctx context.Context, request interface{}, userInfoGetter provi
 	for _, policyBinding := range policyBindingList.Items {
 		if policyBinding.Spec.Target.Projects.SelectAll || slices.Contains(policyBinding.Spec.Target.Projects.Name, req.ProjectID) || req.ProjectID == "" {
 			res = append(res, &apiv2.PolicyBinding{
-				Name:   policyBinding.Name,
-				Spec:   policyBinding.Spec,
-				Status: policyBinding.Status,
+				Name:      policyBinding.Name,
+				NameSpace: policyBinding.Namespace,
+				Spec:      policyBinding.Spec,
+				Status:    policyBinding.Status,
 			})
 		}
 	}
@@ -173,9 +174,10 @@ func GetEndpoint(ctx context.Context, request interface{}, userInfoGetter provid
 
 	if policyBinding.Spec.Target.Projects.SelectAll || slices.Contains(policyBinding.Spec.Target.Projects.Name, req.ProjectID) || req.ProjectID == "" {
 		return &apiv2.PolicyBinding{
-			Name:   policyBinding.Name,
-			Spec:   policyBinding.Spec,
-			Status: policyBinding.Status,
+			Name:      policyBinding.Name,
+			NameSpace: policyBinding.Namespace,
+			Spec:      policyBinding.Spec,
+			Status:    policyBinding.Status,
 		}, nil
 	}
 
@@ -239,9 +241,10 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 		return nil, err
 	}
 	return &apiv2.PolicyBinding{
-		Name:   created.Name,
-		Spec:   created.Spec,
-		Status: created.Status,
+		Name:      created.Name,
+		NameSpace: created.Namespace,
+		Spec:      created.Spec,
+		Status:    created.Status,
 	}, nil
 }
 
@@ -292,9 +295,10 @@ func PatchEndpoint(ctx context.Context, request interface{}, userInfoGetter prov
 		return nil, err
 	}
 	return &apiv2.PolicyBinding{
-		Name:   patchedPolicyBinding.Name,
-		Spec:   *patchedPolicyBinding.Spec.DeepCopy(),
-		Status: patchedPolicyBinding.Status,
+		Name:      patchedPolicyBinding.Name,
+		NameSpace: patchedPolicyBinding.Namespace,
+		Spec:      *patchedPolicyBinding.Spec.DeepCopy(),
+		Status:    patchedPolicyBinding.Status,
 	}, nil
 }
 
