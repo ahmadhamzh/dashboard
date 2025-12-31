@@ -312,7 +312,14 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
       .pipe(takeUntil(this._unsubscribe))
       .pipe(tap(dc => (this._datacenterSpec = dc)))
       .pipe(tap(() => this._loadOperatingSystemProfiles()))
-      .subscribe(_ => this._setDefaultOS());
+      .subscribe(_ => {
+        if (this.provider === NodeProvider.KUBEVIRT) {
+          this.form.get(Controls.OperatingSystemProfile).setValue({main: ''});
+          this.form.get(Controls.OperatingSystemProfile).disable();
+          this._filterOSPByVersion();
+        }
+        this._setDefaultOS();
+      });
 
     merge(
       this.form.get(Controls.Name).valueChanges,
@@ -761,5 +768,27 @@ export class NodeDataComponent extends BaseFormValidator implements OnInit, OnDe
     this._applicationService.applications = this._applicationService.applications.filter(
       app => app.spec.applicationRef.name !== CLUSTER_AUTOSCALING_APP_DEF_NAME
     );
+  }
+
+  private _filterOSPByVersion(): void {
+    this._nodeDataService.kubeVirt.osImageVersion$.pipe(takeUntil(this._unsubscribe)).subscribe(version => {
+      if (version) {
+        this.supportedOperatingSystemProfiles = this.supportedOperatingSystemProfiles.filter(osp =>
+          this._checkOSPVersion(osp, version)
+        );
+        this.form.get(Controls.OperatingSystemProfile).enable();
+      } else {
+        this.form.get(Controls.OperatingSystemProfile).setValue({main: ''});
+        this.form.get(Controls.OperatingSystemProfile).disable();
+      }
+    });
+  }
+
+  private _checkOSPVersion(osp: string, version: string): boolean {
+    if (!version) {
+      return true;
+    }
+    const ospObject = this.operatingSystemProfiles.find(profile => profile.name === osp);
+    return !ospObject?.osVersion || ospObject?.osVersion === version;
   }
 }

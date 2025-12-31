@@ -442,6 +442,8 @@ export class KubeVirtBasicNodeDataComponent
   }
 
   onOSImageChange(osImageLink: string): void {
+    this._nodeDataService.kubeVirt.osImageVersion =
+      this.osImageDropdownOptions.find(image => image.link === osImageLink)?.version || '';
     this._nodeDataService.nodeData.spec.cloud.kubevirt.primaryDiskOSImage = osImageLink;
     this._nodeDataService.nodeDataChanges.next(this._nodeDataService.nodeData);
   }
